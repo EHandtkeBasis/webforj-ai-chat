@@ -3,7 +3,9 @@
 A standalone, provider-agnostic chat UI built with webforJ 26.02. It takes the useful interaction
 patterns from [ghost:ai](https://github.com/webforj/built-with-webforj/tree/main/webforj-ghostai)
 and packages them as one reusable `AiChat` composite instead of coupling the view to Spring AI or a
-specific model.
+specific model. The root project builds a normal library JAR with no Spring dependencies,
+annotations, dependency injection, or application configuration. Spring Boot is used only by the
+optional, separate `demo/` application.
 
 ## Included
 
@@ -17,18 +19,56 @@ specific model.
 - Browser speech-to-text with locale selection, permission/error feedback, and an unsupported-browser fallback
 - A runnable provider-free demo and unit tests
 
-## Run the demo
+## Build and use the library
 
 Requirements: Java 21 and Maven 3.9+.
 
 ```shell
-mvn package
-mvn spring-boot:run
+mvn clean install
+```
+
+This runs the Java and frontend tests and installs the component in your local Maven repository.
+Add it to a plain webforJ 26.02 application (Spring is not required):
+
+```xml
+<dependency>
+  <groupId>com.example</groupId>
+  <artifactId>webforj-ai-chat-component</artifactId>
+  <version>1.0-SNAPSHOT</version>
+</dependency>
+```
+
+Keep the webforJ Maven bundler enabled in the consuming application's build:
+
+```xml
+<plugin>
+  <groupId>com.webforj</groupId>
+  <artifactId>webforj-maven-plugin</artifactId>
+  <version>26.02</version>
+  <extensions>true</extensions>
+</plugin>
+```
+
+Ensure the application has a `src/main/frontend` directory; a tracked `.gitkeep` is sufficient.
+The library ships its CSS and speech-recognition sources under `META-INF/webforj/frontend`.
+The application's bundler extracts and compiles them automatically; no source copying or Node
+installation is needed. Run `mvn package` in the application to build its frontend.
+
+The library uses only core webforJ modules, with JUnit and Mockito for tests. A Maven Enforcer
+rule rejects direct and transitive Spring dependencies so this boundary stays enforced.
+
+## Run the optional demo
+
+After installing the library as above:
+
+```shell
+mvn -f demo/pom.xml package
+mvn -f demo/pom.xml spring-boot:run
 ```
 
 Open `http://localhost:8080`. The demo returns a local markdown response, so it needs no API key.
-For live stylesheet rebuilding during development, run
-`mvn compile webforj:watch spring-boot:run` instead.
+Spring dependencies and application settings live entirely in `demo/` and are not included in
+the library JAR. After editing the component, run `mvn install` and rebuild/restart the demo.
 
 ## Customize the component
 
@@ -79,8 +119,9 @@ chat.onStop(event -> provider.cancel());
 The provider is intentionally not part of this project. The same UI works with Spring AI,
 LangChain4j, an HTTP/SSE client, a WebSocket, or an in-process agent.
 
-All component mutations must happen on the webforJ UI thread. Use `Environment.runLater` when a
-provider calls back from a worker or network thread.
+All component mutations must happen on the webforJ UI thread. Use
+`com.webforj.Environment.runLater` when a provider calls back from a worker or network thread;
+this is a webforJ API, not Spring's `Environment`.
 
 ## Speech to text
 
@@ -148,6 +189,7 @@ event types stable. The implementation is split into package-private collaborato
 rendering finishes; delayed completion callbacks from cleared or cancelled turns cannot finish a
 newer turn. Labels and the avatar factory apply when a message is created.
 
-To reuse the component, copy the whole `com.example.aichat.component` package and the
-`src/main/frontend/chat` directory into a webforJ 26.01+ project. The owning classes load their
-frontend resources through `@BundleEntry`; keep the webforJ Maven bundler plugin enabled.
+The root `src/main` contains only the reusable component and its frontend. The optional demo's
+entry point, route, and application settings live under `demo/src/main` and consume the library
+as a Maven dependency. The owning component classes load their frontend resources through
+`@BundleEntry`.
