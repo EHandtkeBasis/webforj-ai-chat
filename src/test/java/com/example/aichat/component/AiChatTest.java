@@ -53,6 +53,27 @@ class AiChatTest {
     assertEquals("", chat.getSubtitle());
     assertEquals("", chat.getEmptyStateTitle());
     assertEquals("", chat.getEmptyStateDescription());
+    assertTrue(chat.isProgressiveRender());
+  }
+
+  @Test
+  void disablingAnimationCompletesResponsesWithoutWaitingForBrowserAnimation() {
+    AiChat chat = new AiChat();
+    assertSame(chat, chat.setProgressiveRender(false));
+    assertFalse(chat.isProgressiveRender());
+
+    chat.submitPrompt("first").appendResponse("one ").appendResponse("two").completeResponse();
+    assertFalse(chat.isBusy());
+    assertEquals(2, chat.getMessageCount());
+
+    chat.clear();
+    assertFalse(chat.isProgressiveRender());
+    chat.submitPrompt("empty response").completeResponse();
+    assertFalse(chat.isBusy());
+
+    chat.setProgressiveRender(true).submitPrompt("animated").appendResponse("reply").completeResponse();
+    assertTrue(chat.isBusy());
+    chat.cancelResponse();
   }
 
   @Test

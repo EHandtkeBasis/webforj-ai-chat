@@ -25,6 +25,7 @@ final class ChatMessageList extends Composite<Div> {
   private final Consumer<String> submitPrompt;
   private String userLabel = "You";
   private String assistantLabel = "Assistant";
+  private boolean progressiveRender = true;
   private Supplier<? extends Component> assistantAvatarFactory;
 
   ChatMessageList(Consumer<String> submitPrompt) {
@@ -105,6 +106,14 @@ final class ChatMessageList extends Composite<Div> {
     assistantAvatarFactory = factory;
   }
 
+  void setProgressiveRender(boolean enabled) {
+    progressiveRender = enabled;
+  }
+
+  boolean isProgressiveRender() {
+    return progressiveRender;
+  }
+
   void addUserMessage(String text) {
     Span role = new Span(userLabel);
     role.addClassName("ai-chat__role");
@@ -120,7 +129,7 @@ final class ChatMessageList extends Composite<Div> {
 
   AssistantMessage addAssistantMessage(boolean pending) {
     Component avatar = assistantAvatarFactory == null ? null : assistantAvatarFactory.get();
-    AssistantMessage message = new AssistantMessage(assistantLabel, avatar, pending);
+    AssistantMessage message = new AssistantMessage(assistantLabel, avatar, pending, progressiveRender);
     addRow(message.getRow());
     return message;
   }

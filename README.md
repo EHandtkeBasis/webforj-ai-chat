@@ -7,6 +7,9 @@ specific model. The root project builds a normal library JAR with no Spring depe
 annotations, dependency injection, or application configuration. Spring Boot is used only by the
 optional, separate `demo/` application.
 
+For deployment **inside BBj Services** (for example, alongside CarIT), use the Spring-free
+[`demo-bbj/` application](demo-bbj/README.md). The existing `demo/` is only a Spring Boot host.
+
 ## Included
 
 - Progressive streaming markdown with smart auto-scroll
@@ -57,7 +60,27 @@ installation is needed. Run `mvn package` in the application to build its fronte
 The library uses only core webforJ modules, with JUnit and Mockito for tests. A Maven Enforcer
 rule rejects direct and transitive Spring dependencies so this boundary stays enforced.
 
-## Run the optional demo
+## Deploy into BBj Services
+
+After installing the library, build the BBj application without deploying it:
+
+```shell
+mvn -f demo-bbj/pom.xml clean package
+```
+
+The BBj host excludes the standalone engine, packages the chat classes into its application JAR,
+and eagerly bundles the frontend for classpath loading in BBj Services. Publishing is opt-in:
+
+```shell
+mvn -f demo-bbj/pom.xml -Pbbj-deploy install "-Dbbj.deployUrl=http://BBJ_HOST:8888/webforj-install"
+```
+
+Replace `BBJ_HOST` and the scheme/port with the approved server. This publishes or updates the
+`ai-chat` application. See the [BBj deployment guide](demo-bbj/README.md) for server
+prerequisites and checks. CarIT integration is not implemented by deployment alone; the demo
+still returns a local response until its host-side handler is connected to an agreed interface.
+
+## Run the optional Spring Boot demo
 
 After installing the library as above:
 
@@ -153,6 +176,7 @@ browser, audio may be sent to a remote recognition service rather than processed
 | `onPromptSubmit(listener)` | Receive the normalized user prompt |
 | `appendResponse(chunk)` | Append a streamed markdown chunk |
 | `completeResponse()` | Finish after progressive rendering drains |
+| `setProgressiveRender(enabled)` | Enable typewriter animation for future replies; chunk streaming is unaffected |
 | `failResponse(message)` | Show a user-facing provider error |
 | `cancelResponse()` | Stop rendering and emit a stop event |
 | `addMessage(role, content)` | Restore completed conversation history |
@@ -189,7 +213,7 @@ event types stable. The implementation is split into package-private collaborato
 rendering finishes; delayed completion callbacks from cleared or cancelled turns cannot finish a
 newer turn. Labels and the avatar factory apply when a message is created.
 
-The root `src/main` contains only the reusable component and its frontend. The optional demo's
-entry point, route, and application settings live under `demo/src/main` and consume the library
-as a Maven dependency. The owning component classes load their frontend resources through
-`@BundleEntry`.
+The root `src/main` contains only the reusable component and its frontend. The Spring Boot demo
+lives under `demo/src/main`; the BBj Services entry point and configuration live under
+`demo-bbj/src/main`. Both hosts consume the library as a Maven dependency. The owning component
+classes load their frontend resources through `@BundleEntry`.

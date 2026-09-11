@@ -101,6 +101,19 @@ public final class AiChat extends Composite<Div>
     return this;
   }
 
+  /**
+   * Enables typewriter animation for future responses (enabled by default).
+   * Disabling it displays each appended chunk immediately; provider streaming is unchanged.
+   */
+  public AiChat setProgressiveRender(boolean enabled) {
+    messages.setProgressiveRender(enabled);
+    return this;
+  }
+
+  public boolean isProgressiveRender() {
+    return messages.isProgressiveRender();
+  }
+
   public AiChat setTitle(String value) {
     header.setTitle(value);
     return this;

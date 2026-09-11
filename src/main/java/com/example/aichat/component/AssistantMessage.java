@@ -15,14 +15,14 @@ final class AssistantMessage {
   private boolean hasContent;
   private boolean complete;
 
-  AssistantMessage(String label, Component avatarContent, boolean pending) {
+  AssistantMessage(String label, Component avatarContent, boolean pending, boolean progressiveRender) {
     Span role = new Span(label);
     role.addClassName("ai-chat__role");
     role.setVisible(!label.isBlank());
     thinking.add(DwcIcon.ANIMATED_SPINNER.create(), new Span("Thinking..."));
     thinking.addClassName("ai-chat__thinking");
     thinking.setVisible(pending);
-    viewer.setAutoScroll(true).setProgressiveRender(pending).setRenderSpeed(8);
+    viewer.setAutoScroll(true).setProgressiveRender(pending && progressiveRender).setRenderSpeed(8);
     viewer.setVisible(false);
     viewer.addClassName("ai-chat__answer");
 

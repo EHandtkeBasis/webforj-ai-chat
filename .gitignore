@@ -1,6 +1,7 @@
 target/
 node_modules/
 **/src/main/frontend/generated/
+dependency-reduced-pom.xml
 .idea/
 .vscode/
 *.iml
